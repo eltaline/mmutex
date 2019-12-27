@@ -57,7 +57,7 @@ func (m *Mutex) moff(retries int) time.Duration {
 	return time.Duration(moff) * time.Nanosecond
 }
 
-func NewMMutex(lockRetries int, lockDelay, stdtDelay, lockFactor, lockJitter float64) *Mutex {
+func NewMMutex() *Mutex {
 	return &Mutex{
 		locks:         make(map[interface{}]interface{}),
 		m:             &sync.Mutex{},
