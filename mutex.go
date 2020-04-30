@@ -61,7 +61,7 @@ func NewMMutex() *Mutex {
 	return &Mutex{
 		locks:         make(map[interface{}]interface{}),
 		m:             &sync.Mutex{},
-		lockRetries:   300,
+		lockRetries:   450,
 		lockDelay:     10000000,
 		stdtDelay:     10000,
 		lockFactor:    1.1,
