@@ -21,10 +21,10 @@ func (m *Mutex) IsLock(key interface{}) bool {
 	m.m.RLock()
 
 	if _, ok := m.locks[key]; ok {
-		m.m.RULock()
+		m.m.RUnlock()
 		return true
 	} else {
-		m.m.RULock()
+		m.m.RUnlock()
 		return false
 	}
 
