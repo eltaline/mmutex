@@ -37,11 +37,11 @@ func (m *Mutex) TryLock(key interface{}) bool {
 		m.m.Lock()
 
 		if _, ok := m.locks[key]; ok {
-			m.m.UnLock()
+			m.m.Unlock()
 			time.Sleep(m.moff(i))
 		} else {
 			m.locks[key] = struct{}{}
-			m.m.UnLock()
+			m.m.Unlock()
 			return true
 		}
 
@@ -55,7 +55,7 @@ func (m *Mutex) UnLock(key interface{}) {
 
 	m.m.Lock()
 	delete(m.locks, key)
-	m.m.UnLock()
+	m.m.Unlock()
 
 }
 
