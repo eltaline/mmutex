@@ -8,7 +8,7 @@ import (
 
 type Mutex struct {
 	locks       map[interface{}]interface{}
-	m           *sync.Mutex
+	m           *sync.RWMutex
 	lockRetries  int
 	lockDelay    float64
 	stdtDelay   float64
@@ -18,9 +18,13 @@ type Mutex struct {
 
 func (m *Mutex) IsLock(key interface{}) bool {
 
+	m.m.RLock()
+
 	if _, ok := m.locks[key]; ok {
+		m.m.RULock()
 		return true
 	} else {
+		m.m.RULock()
 		return false
 	}
 
@@ -86,7 +90,7 @@ func NewMMutex() *Mutex {
 
 	return &Mutex{
 		locks:         make(map[interface{}]interface{}),
-		m:             &sync.Mutex{},
+		m:             &sync.RWMutex{},
 		lockRetries:   450,
 		lockDelay:     10000000,
 		stdtDelay:     10000,
