@@ -18,8 +18,6 @@ type Mutex struct {
 
 func (m *Mutex) IsLock(key interface{}) bool {
 
-	m.m.Lock()
-
 	if _, ok := m.locks[key]; ok {
 		return true
 	} else {
