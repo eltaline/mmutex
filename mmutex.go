@@ -16,7 +16,7 @@ type Mutex struct {
 	lockJitter  float64
 }
 
-func (m *Mutex) GetLock(key interface{}) bool {
+func (m *Mutex) IsLock(key interface{}) bool {
 
 	m.m.Lock()
 
@@ -37,24 +37,25 @@ func (m *Mutex) TryLock(key interface{}) bool {
 		m.m.Lock()
 
 		if _, ok := m.locks[key]; ok {
-			m.m.Unlock()
+			m.m.UnLock()
 			time.Sleep(m.moff(i))
 		} else {
 			m.locks[key] = struct{}{}
-			m.m.Unlock()
+			m.m.UnLock()
 			return true
 		}
 
 	}
 
 	return false
+
 }
 
-func (m *Mutex) Unlock(key interface{}) {
+func (m *Mutex) UnLock(key interface{}) {
 
 	m.m.Lock()
 	delete(m.locks, key)
-	m.m.Unlock()
+	m.m.UnLock()
 
 }
 
