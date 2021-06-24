@@ -102,7 +102,6 @@ func (m *Mutex) TryRLock(key interface{}) bool {
 
 }
 
-
 func (m *Mutex) UnLock(key interface{}) {
 
 	m.m.Lock()
@@ -129,15 +128,19 @@ func (m *Mutex) RUnLock(key interface{}) {
 
 	if locks, ok := m.locks[key]; ok {
 
-		if locks > 1 {
+		switch {
+		case locks == 0:
+
+			m.m.Unlock()
+			return
+
+		case locks > 1:
 
 			m.locks[key]--
 			m.m.Unlock()
 			return
 
-		}
-
-		if locks != 0 {
+		default:
 
 			delete(m.locks, key)
 			m.m.Unlock()
@@ -147,6 +150,7 @@ func (m *Mutex) RUnLock(key interface{}) {
 
 	}
 
+	delete(m.locks, key)
 	m.m.Unlock()
 
 }
