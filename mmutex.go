@@ -7,7 +7,7 @@ import (
 )
 
 type Mutex struct {
-	locks       map[interface{}]interface{}
+	locks       map[interface{}]int
 	m           *sync.RWMutex
 	lockRetries int
 	lockDelay   float64
@@ -30,6 +30,20 @@ func (m *Mutex) IsLock(key interface{}) bool {
 
 }
 
+func (m *Mutex) IsLockCount(key interface{}) (int, bool) {
+
+	m.m.RLock()
+
+	if locks, ok := m.locks[key]; ok {
+		m.m.RUnlock()
+		return locks, true
+	}
+
+	m.m.RUnlock()
+	return 0, false
+
+}
+
 func (m *Mutex) TryLock(key interface{}) bool {
 
 	for i := 0; i < m.lockRetries; i++ {
@@ -43,7 +57,7 @@ func (m *Mutex) TryLock(key interface{}) bool {
 
 		} else {
 
-			m.locks[key] = struct{}{}
+			m.locks[key] = 0
 			m.m.Unlock()
 			return true
 
@@ -55,10 +69,84 @@ func (m *Mutex) TryLock(key interface{}) bool {
 
 }
 
+func (m *Mutex) TryRLock(key interface{}) bool {
+
+	for i := 0; i < m.lockRetries; i++ {
+
+		m.m.Lock()
+
+		if locks, ok := m.locks[key]; ok {
+
+			if locks > 0 {
+
+				m.locks[key]++
+				m.m.Unlock()
+				return true
+
+			}
+
+			m.m.Unlock()
+			time.Sleep(m.moff(i))
+
+		} else {
+
+			m.locks[key] = 1
+			m.m.Unlock()
+			return true
+
+		}
+
+	}
+
+	return false
+
+}
+
+
 func (m *Mutex) UnLock(key interface{}) {
 
 	m.m.Lock()
+
+	if locks, ok := m.locks[key]; ok {
+
+		if locks > 0 {
+
+			m.m.Unlock()
+			return
+
+		}
+
+	}
+
 	delete(m.locks, key)
+	m.m.Unlock()
+
+}
+
+func (m *Mutex) RUnLock(key interface{}) {
+
+	m.m.Lock()
+
+	if locks, ok := m.locks[key]; ok {
+
+		if locks > 1 {
+
+			m.locks[key]--
+			m.m.Unlock()
+			return
+
+		}
+
+		if locks != 0 {
+
+			delete(m.locks, key)
+			m.m.Unlock()
+			return
+
+		}
+
+	}
+
 	m.m.Unlock()
 
 }
@@ -91,9 +179,9 @@ func (m *Mutex) moff(retries int) time.Duration {
 func NewMMutex() *Mutex {
 
 	return &Mutex{
-		locks:       make(map[interface{}]interface{}),
+		locks:       make(map[interface{}]int),
 		m:           &sync.RWMutex{},
-		lockRetries: 450,
+		lockRetries: 512,
 		lockDelay:   10000000,
 		stdtDelay:   10000,
 		lockFactor:  1.1,
